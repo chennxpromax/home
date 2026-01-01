@@ -1,210 +1,170 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<meta name="generator" content="Hugo 0.91.2" />
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>chenx's homepage</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="">
-  <meta name="author" content="">
-  <meta name="keywords" content="">
-  <link rel="canonical" href="http://cex.github.io/">
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas示例</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
 
-  
-  
+      #myCanvas {
+        background-color: #1a1a2e;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        display: block; /* 移除默认的inline间隙 */
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="600" height="600"></canvas>
 
-  
-  
+    <script>
+      const canvas = document.getElementById("myCanvas");
+      const ctx = canvas.getContext("2d");
+      const FOREGROUND = "#50ff50";
 
-  
-  
+      // 用矩形填充整个画布作为背景
+      function setBackground(color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
 
-  <link rel="stylesheet" type="text/css" href="http://cex.github.io//css/combined-min.css">
-  <link rel="stylesheet" type="text/css" href="http://cex.github.io//tipuesearch/tipuesearch.css">
+      // 设置背景颜色
+      setBackground("#1a1a2e");
 
-</head>
-<body class="">
-<audio controls>
-    <source src="audio/陶喆 - 飞机场的1030.flac" type="audio/mpeg">
-    Your browser does not support the audio element.
-</audio> 
-<div class="site-wrap">
-    <header class="site-header px2 px-responsive">
-  <div class="mt2 wrap">
-    <div class="measure">
-      <a href="http://cex.github.io/" class="site-title">Pixyll</a>
-      <nav class="site-nav right">
-      <a href="http://cex.github.io//about/">About</a>
-<a href="http://cex.github.io//tags/">Tags</a>
-<a href="http://cex.github.io//contact/">Contact</a><a href="./ru">ru</a>
-<form class="navbar-search" action="http://cex.github.io//search/index.html"
-    onsubmit="return validateForm(this.elements['q'].value);">
-    <input type="text" class="search-query" placeholder="Search" name="q" id="tipue_search_input">
+      // 设置渐变背景
+      function setGradientBackground() {
+        const gradient = ctx.createLinearGradient(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        gradient.addColorStop(0, "#1a1a2e");
+        gradient.addColorStop(1, "#16213e");
 
-</form>
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
 
-      </nav>
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</header>
+      setGradientBackground();
 
-    
-    <div class="post p2 p-responsive wrap" role="main">
-        <div class="measure">
-            <div class="home">
-                <div class="posts">
-                    
-                        
-                        
-                            <div class="post">
-  <a class="post-link" href="http://cex.github.io/post/my-fourth-post/">
-  <p class="post-meta left">Aug 30, 2017</p>
-  <p class="post-author right">Written by admin</p>
-  <div class="clearfix"></div>
-  <h3 class="h2 post-title">My Fourth post </h3>
-  <p class="post-summary">Carried nothing on am warrant towards. Polite in of in oh needed itself silent course. Assistance travelling so especially do prosperous appearance mr no celebrated. Wanted easily in my called formed suffer. Songs hoped sense as taken ye mirth at. Believe fat how six drawing pursuit minutes far. Same do seen head am part it dear open to. Whatever may scarcely judgment had.</p>
-  </a>
-  
-   
-  <p class="post-meta">Tags:&nbsp;
-  
+      function clear() {
+        setBackground("#1a1a2e");
+      }
+
+      function screen({ x, y }) {
+        return {
+          // -1..1 => 0..w
+          // -1..1 => h..0
+          x: ((x + 1) / 2) * canvas.width,
+          y: ((1 - y) / 2) * canvas.height,
+        };
+      }
+
+      function point({ x, y }) {
+        w = 5;
+        ctx.fillStyle = FOREGROUND;
+        ctx.fillRect(x - w / 2, y - w / 2, w, w);
+      }
+
+      function project({ x, y, z }) {
+        return {
+          x: x / z,
+          y: y / z,
+        };
+      }
+
+      function translate_z({x, y, z}, dz) {
+        return {
+            x, 
+            y,
+            z: z + dz
+        }
+      }
+
+      function rotate_xz({x, y, z}, angle) {
+        const c = Math.cos(angle)
+        const s = Math.sin(angle)
+        return {
+            x: x*c - z*s,
+            y,
+            z: x*s + z*c
+        }
+      }
+      function line(p1, p2) {
+        ctx.strokeStyle = FOREGROUND;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
       
-      <a href="http://cex.github.io//tags/blog">blog</a>
-  </p>
-  
-</div>
+      function _face(points) {
+        ctx.strokeStyle = FOREGROUND;
+        ctx.fillStyle = FOREGROUND
+        ctx.beginPath();
+        p1 = points[0]
+        ctx.moveTo(p1.x, p1.y);
+        for (let i = 1; i < points.length; i++) {
+          p = points[i]
+          ctx.lineTo(p.x, p.y)
+        }
+        ctx.closePath()
+        ctx.fill()
+      }
 
-                        
-                            <div class="post">
-  <a class="post-link" href="http://cex.github.io/post/my-third-post/">
-  <p class="post-meta left">Aug 30, 2017</p>
-  <p class="post-author right">Written by admin</p>
-  <div class="clearfix"></div>
-  <h3 class="h2 post-title">My Third post </h3>
-  <p class="post-summary">Doubtful two bed way pleasure confined followed. Shew up ye away no eyes life or were this. Perfectly did suspicion daughters but his intention. Started on society an brought it explain. Position two saw greatest stronger old. Pianoforte if at simplicity do estimating.
-And produce say the ten moments parties. Simple innate summer fat appear basket his desire joy. Outward clothes promise at gravity do excited. Sufficient particular impossible by reasonable oh expression is.</p>
-  </a>
-  
-   
-  <p class="post-meta">Tags:&nbsp;
-  
-      
-      <a href="http://cex.github.io//tags/blog">blog</a>
-  </p>
-  
-</div>
+      const points = [
+        { x: -0.25, y: 0.25, z: 0.25 },
+        { x: 0.25, y: 0.25, z: 0.25 },
+        { x: 0.25, y: -0.25, z: 0.25 },
+        { x: -0.25, y: -0.25, z: 0.25 },
 
-                        
-                            <div class="post">
-  <a class="post-link" href="http://cex.github.io/post/my-second-post/">
-  <p class="post-meta left">Aug 30, 2017</p>
-  <p class="post-author right">Written by admin</p>
-  <div class="clearfix"></div>
-  <h3 class="h2 post-title">My Second post </h3>
-  <p class="post-summary">Considered discovered ye sentiments projecting entreaties of melancholy is. In expression an solicitude principles in do. Hard do me sigh with west same lady. Their saved linen downs tears son add music. Expression alteration entreaties mrs can terminated estimating. Her too add narrow having wished. To things so denied admire. Am wound worth water he linen at vexed.
-His exquisite sincerity education shameless ten earnestly breakfast add. So we me unknown as improve hastily sitting forming.</p>
-  </a>
-  
-   
-  <p class="post-meta">Tags:&nbsp;
-  
-      
-      <a href="http://cex.github.io//tags/blog">blog</a>
-  </p>
-  
-</div>
+        { x: -0.25, y: 0.25, z: -0.25 },
+        { x: 0.25, y: 0.25, z: -0.25 },
+        { x: 0.25, y: -0.25, z: -0.25 },
+        { x: -0.25, y: -0.25, z: -0.25 },
+      ];
 
-                        
-                            <div class="post">
-  <a class="post-link" href="http://cex.github.io/post/lorem-ipsum/">
-  <p class="post-meta left">Aug 30, 2017</p>
-  <p class="post-author right">Written by admin</p>
-  <div class="clearfix"></div>
-  <h3 class="h2 post-title">Lorem Ipsum </h3>
-  <p class="post-summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi blandit sem vel tortor elementum, vitae vehicula justo aliquam. Interdum et malesuada fames ac ante ipsum primis in faucibus. Etiam malesuada euismod metus, quis pharetra ligula mattis nec. Donec a nibh quis nibh vehicula tempor vel in mauris. Pellentesque sit amet tristique erat, venenatis tempus felis. Sed ac felis augue. Donec interdum libero at velit venenatis, non laoreet risus dignissim. Praesent porta et diam non aliquet.</p>
-  </a>
-  
-   
-  <p class="post-meta">Tags:&nbsp;
-  
-      
-      <a href="http://cex.github.io//tags/lorem">lorem</a>
-  </p>
-  
-</div>
+      const faces = [[0, 1, 2, 3], [4, 5, 6, 7], [0, 4], [1, 5], [2, 6], [3, 7]];
+      // const faces = [[3, 2, 6, 7], [0, 1, 5, 4], [0, 3], [1, 2], [6, 5], [4, 7] ]
 
-                        
-                            <div class="post">
-  <a class="post-link" href="http://cex.github.io/post/is-that-a-cooking-show/">
-  <p class="post-meta left">Aug 30, 2017</p>
-  <p class="post-author right">Written by admin</p>
-  <div class="clearfix"></div>
-  <h3 class="h2 post-title">Is that a cooking show? </h3>
-  <p class="post-summary">With a warning label this big, you know they gotta be fun! Son, as your lawyer, I declare y&rsquo;all are in a 12-piece bucket o' trouble. But I done struck you a deal: Five hours of community service cleanin' up that ol' mess you caused.
-Why, those are the Grunka-Lunkas! They work here in the Slurm factory. Hi, I&rsquo;m a naughty nurse, and I really need someone to talk to. $9.</p>
-  </a>
-  
-   
-  <p class="post-meta">Tags:&nbsp;
-  
-      
-      <a href="http://cex.github.io//tags/futurama">futurama</a>
-  </p>
-  
-</div>
-
-                        
-                </div>
-            </div>
-            <div class="paginatin_area">
-                        <div class="pagination clearfix mb1 mt4">
-  <div class="left">
-  
-  <span class="pagination-item disabled">Newer</span>
-  
-  </div>
-  <div class="right">
-  
-  <a class="pagination-item" href="./page/2/">Older</a>
-  
-  </div>
-</div>
-
-                
-            </div>
-                    
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-    <footer class="footer">
-      <div class="p2 wrap">
-        <div class="measure mt1 center">
-      <nav class="social-icons icons">
-<a class="fa fa-rss rss" href="./index.xml"></a>
-
-<a class="fa fa-twitter twitter" href="https://twitter.com/username"></a>
-
-</nav>
-
-          <small>
-            Copyright &#169; 2017<br>
-            Powered by <a href="http://gohugo.io/" target="_blank">Hugo</a> &amp; <a href="https://github.com/azmelanar/hugo-theme-pixyll" target="_blank">Pixyll</a>
-          </small>
-        </div>
-      </div>
-    </footer>
-
-    
-    <script src="./js/highlight.pack.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
-   
-    
-
-
-</body>
+      const FPS = 60;
+      let dz = 1;
+      let angle = 0;
+      const forward = true
+      function frame() {
+        clear();
+        const dt = 1 / FPS;
+        // dz += 1 * dt;
+        angle += 1 * Math.PI * dt
+        for (const p of points) {
+        //   p.z = forward ? (p.z -= dz) : (p.z += dz);
+        }
+        for (let j = 0; j < faces.length; j++) {
+            const face = faces[j]
+            // if (j == 1) {
+              // ps = face.map(f => screen(project(translate_z(rotate_xz(points[f], angle), dz))))
+              // _face(ps)
+              // continue
+            // }
+            for (let i = 0; i < face.length; i++) {
+                p1 = screen(project(translate_z(rotate_xz(points[face[i]], angle), dz)))
+                p2 = screen(project(translate_z(rotate_xz(points[face[(i + 1) % face.length]], angle), dz)))
+                line(p1, p2)
+            }
+        }
+        setTimeout(frame, 1000 / FPS);
+      }
+      frame();
+    </script>
+  </body>
 </html>
-
